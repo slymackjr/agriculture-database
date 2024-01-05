@@ -276,6 +276,12 @@ END//
 
 DELIMITER ;
 
+-- create user jerry to access the database if it fails to import normally
 
+CREATE USER 'jerry'@'localhost' IDENTIFIED BY 'password';
+
+GRANT ALL PRIVILEGES ON *.* TO 'jerry'@'localhost' IDENTIFIED BY 'jerry' WITH GRANT OPTION;
+
+FLUSH PRIVILEGES;
 
 
