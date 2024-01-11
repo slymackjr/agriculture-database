@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jan 04, 2024 at 10:27 PM
+-- Generation Time: Jan 11, 2024 at 10:50 PM
 -- Server version: 10.4.24-MariaDB
 -- PHP Version: 8.1.6
 
@@ -25,8 +25,8 @@ DELIMITER $$
 --
 -- Procedures
 --
-CREATE DEFINER=`jerry`@`localhost` PROCEDURE `AuthenticateUser` (IN `p_username` VARCHAR(255), IN `p_password` VARCHAR(255), IN `user_type` ENUM('Farmer','VEO'), OUT `is_authenticated` BOOLEAN)   BEGIN
-    IF ValidatePassword(p_username, p_password,user_type) THEN  
+CREATE DEFINER=`jerry`@`localhost` PROCEDURE `AuthenticateFarmer` (IN `p_email` VARCHAR(255), IN `p_password` VARCHAR(255), OUT `is_authenticated` BOOLEAN)   BEGIN
+    IF ValidatePasswordFarmer(p_email, p_password) THEN  
        SET is_authenticated = TRUE;
     END IF;
     IF is_authenticated IS NULL THEN
@@ -34,54 +34,47 @@ CREATE DEFINER=`jerry`@`localhost` PROCEDURE `AuthenticateUser` (IN `p_username`
   END IF;
 END$$
 
-CREATE DEFINER=`jerry`@`localhost` PROCEDURE `InsertDistrict` (IN `p_district_name` VARCHAR(255), IN `p_region_id` INT)   BEGIN
-    INSERT INTO Districts (district_name, region_id)
-    VALUES (p_district_name, p_region_id);
-END$$
-
-CREATE DEFINER=`jerry`@`localhost` PROCEDURE `InsertMessage` (IN `p_sender_id` INT, IN `p_recipient_id` INT, IN `p_title` VARCHAR(255), IN `p_content` TEXT, IN `p_type` ENUM('information','pestOutbreak','diseaseOutbreak','farmProgress','other'))   BEGIN
-    INSERT INTO Messages (sender_id, recipient_id, title, content, type)
-    VALUES (p_sender_id, p_recipient_id, p_title, p_content, p_type);
-END$$
-
-CREATE DEFINER=`jerry`@`localhost` PROCEDURE `InsertRegion` (IN `p_region_name` VARCHAR(255))   BEGIN
-    INSERT INTO Regions (region_name)
-    VALUES (p_region_name);
-END$$
-
-CREATE DEFINER=`jerry`@`localhost` PROCEDURE `InsertUser` (IN `p_user_type` ENUM('farmer','VEO'), IN `p_username` VARCHAR(255), IN `p_password` VARCHAR(255), IN `p_first_name` VARCHAR(255), IN `p_last_name` VARCHAR(255), IN `p_village_id` INT, IN `p_phone_number` VARCHAR(20), IN `p_email` VARCHAR(255))   BEGIN
-    INSERT INTO Users (user_type, username, password, first_name, last_name, village_id, phone_number, email)
-    VALUES (p_user_type, p_username, p_password, p_first_name, p_last_name, p_village_id, p_phone_number, p_email);
-END$$
-
-CREATE DEFINER=`jerry`@`localhost` PROCEDURE `InsertUserAndFarm` (IN `p_user_type` ENUM('farmer','VEO'), IN `p_username` VARCHAR(255), IN `p_password` VARCHAR(255), IN `p_first_name` VARCHAR(255), IN `p_last_name` VARCHAR(255), IN `p_village_id` INT, IN `p_phone_number` VARCHAR(20), IN `p_email` VARCHAR(255), IN `p_farm_name` VARCHAR(100), IN `p_crop_type` VARCHAR(100), IN `p_size` DECIMAL(4,2))   BEGIN
-    DECLARE user_id INT;
-
-    
-    INSERT INTO Users (user_type, username, password, first_name, last_name, village_id, phone_number, email)
-    VALUES (p_user_type, p_username, p_password, p_first_name, p_last_name, p_village_id, p_phone_number, p_email);
-
-    
-    SET user_id = LAST_INSERT_ID();
-
-    
-    IF p_user_type = 'farmer' THEN
-        INSERT INTO Farm (user_id, farm_name, crop_type, size)
-        VALUES (user_id, p_farm_name, p_crop_type, p_size);
+CREATE DEFINER=`jerry`@`localhost` PROCEDURE `AuthenticateVeo` (IN `p_email` VARCHAR(255), IN `p_password` VARCHAR(255), OUT `is_authenticated` BOOLEAN)   BEGIN
+    IF ValidatePasswordVeo(p_email, p_password) THEN  
+       SET is_authenticated = TRUE;
     END IF;
+    IF is_authenticated IS NULL THEN
+        SET is_authenticated = FALSE;
+  END IF;
 END$$
 
-CREATE DEFINER=`jerry`@`localhost` PROCEDURE `InsertVillage` (IN `p_village_name` VARCHAR(255), IN `p_district_id` INT)   BEGIN
-    INSERT INTO Villages (village_name, district_id)
-    VALUES (p_village_name, p_district_id);
+CREATE DEFINER=`jerry`@`localhost` PROCEDURE `InsertFarmer` (IN `p_username` VARCHAR(255), IN `p_password` VARCHAR(255), IN `p_first_name` VARCHAR(255), IN `p_last_name` VARCHAR(255), IN `p_residence_id` VARCHAR(255), IN `p_farm_id` VARCHAR(255), IN `p_phone_number` VARCHAR(20), IN `p_email` VARCHAR(255))   BEGIN
+    INSERT INTO Farmer (farm_id, username, password, first_name, last_name, residence_id, phone_number, email)
+    VALUES (p_farm_id, p_username, p_password, p_first_name, p_last_name, p_residence_id, p_phone_number, p_email);
+END$$
+
+CREATE DEFINER=`jerry`@`localhost` PROCEDURE `InsertFarmerMessage` (IN `p_sender_email` VARCHAR(255), IN `p_recipient_email` VARCHAR(255), IN `p_title` VARCHAR(255), IN `p_content` TEXT, IN `p_type` ENUM('information','pestOutbreak','diseaseOutbreak','farmProgress','other'))   BEGIN
+    INSERT INTO FarmerMessages (sender_email, recipient_email, title, content, type)
+    VALUES (p_sender_email, p_recipient_email, p_title, p_content, p_type);
+END$$
+
+CREATE DEFINER=`jerry`@`localhost` PROCEDURE `InsertVeo` (IN `p_username` VARCHAR(255), IN `p_password` VARCHAR(255), IN `p_first_name` VARCHAR(255), IN `p_last_name` VARCHAR(255), IN `p_job_title` VARCHAR(255), IN `p_residence_id` VARCHAR(255), IN `p_phone_number` VARCHAR(20), IN `p_email` VARCHAR(255))   BEGIN
+    INSERT INTO Veo (username, password, first_name, last_name, job_title, residence_id, phone_number, email)
+    VALUES (p_username, p_password, p_first_name, p_last_name, p_job_title, p_residence_id, p_phone_number, p_email);
+END$$
+
+CREATE DEFINER=`jerry`@`localhost` PROCEDURE `InsertVeoMessage` (IN `p_sender_email` VARCHAR(255), IN `p_recipient_email` VARCHAR(255), IN `p_title` VARCHAR(255), IN `p_content` TEXT, IN `p_type` ENUM('information','pestOutbreak','diseaseOutbreak','farmProgress','other'))   BEGIN
+    INSERT INTO VeoMessages (sender_email, recipient_email, title, content, type)
+    VALUES (p_sender_email, p_recipient_email, p_title, p_content, p_type);
 END$$
 
 --
 -- Functions
 --
-CREATE DEFINER=`jerry`@`localhost` FUNCTION `ValidatePassword` (`username` VARCHAR(50), `password` VARCHAR(255), `usertype` VARCHAR(50)) RETURNS TINYINT(1)  BEGIN
+CREATE DEFINER=`jerry`@`localhost` FUNCTION `ValidatePasswordFarmer` (`email` VARCHAR(255), `password` VARCHAR(255)) RETURNS TINYINT(1)  BEGIN
     DECLARE stored_hash CHAR(60);
-    SELECT password INTO stored_hash FROM Users WHERE type = usertype AND username = username;
+    SELECT password INTO stored_hash FROM Farmer WHERE email = email;
+    RETURN stored_hash = SHA2(password, 512);
+END$$
+
+CREATE DEFINER=`jerry`@`localhost` FUNCTION `ValidatePasswordVeo` (`email` VARCHAR(255), `password` VARCHAR(255)) RETURNS TINYINT(1)  BEGIN
+    DECLARE stored_hash CHAR(60);
+    SELECT password INTO stored_hash FROM Veo WHERE email = email;
     RETURN stored_hash = SHA2(password, 512);
 END$$
 
@@ -90,50 +83,96 @@ DELIMITER ;
 -- --------------------------------------------------------
 
 --
--- Table structure for table `districts`
+-- Table structure for table `farm`
 --
 
-CREATE TABLE `districts` (
-  `district_id` int(11) NOT NULL,
-  `district_name` varchar(255) NOT NULL,
-  `region_id` int(11) DEFAULT NULL
+CREATE TABLE `farm` (
+  `farmer_email` varchar(255) NOT NULL,
+  `farm_name` varchar(100) NOT NULL,
+  `farm_id` varchar(255) NOT NULL,
+  `crop_type` varchar(255) DEFAULT NULL,
+  `size` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `farm`
+-- Table structure for table `farmer`
 --
 
-CREATE TABLE `farm` (
-  `farm_id` int(11) NOT NULL,
-  `user_id` int(11) NOT NULL,
-  `farm_name` varchar(100) NOT NULL,
-  `crop_type` varchar(100) DEFAULT NULL,
-  `size` decimal(4,2) NOT NULL
+CREATE TABLE `farmer` (
+  `username` varchar(255) NOT NULL,
+  `password` varchar(255) NOT NULL,
+  `first_name` varchar(255) DEFAULT NULL,
+  `last_name` varchar(255) DEFAULT NULL,
+  `residence_id` varchar(255) DEFAULT NULL,
+  `farm_id` varchar(255) DEFAULT NULL,
+  `phone_number` varchar(20) DEFAULT NULL,
+  `email` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
--- Triggers `farm`
+-- Triggers `farmer`
 --
 DELIMITER $$
-CREATE TRIGGER `LogFarmDelete` BEFORE DELETE ON `farm` FOR EACH ROW BEGIN
-  INSERT INTO logs (user_id, action, table_name, logged_at, details)
-  VALUES (OLD.user_id, 'DELETE', 'Farm', NOW(), CONCAT('FarmID: ', OLD.farm_id, ', FarmName: ', OLD.farm_name));
+CREATE TRIGGER `LogDeleteFarmer` BEFORE DELETE ON `farmer` FOR EACH ROW BEGIN
+  INSERT INTO Logs (user_email,action,table_name,logged_at,details)
+  VALUES (OLD.email, 'DELETE ACCOUNT', 'Farmer', NOW(), CONCAT('Farmer Deleted Account: ', OLD.username));
 END
 $$
 DELIMITER ;
 DELIMITER $$
-CREATE TRIGGER `LogFarmInsert` AFTER INSERT ON `farm` FOR EACH ROW BEGIN
-  INSERT INTO logs (user_id, action, table_name, logged_at, details)
-  VALUES (NEW.user_id, 'INSERT', 'Farm', NOW(), CONCAT('FarmID: ', NEW.farm_id, ', FarmName: ', NEW.farm_name));
+CREATE TRIGGER `LogInsertFarmer` AFTER INSERT ON `farmer` FOR EACH ROW BEGIN
+  INSERT INTO Logs (user_email,action,table_name,logged_at,details)
+  VALUES (NEW.email, 'REGISTER', 'Farmer', NOW(), CONCAT('New Farmer Registered: ', NEW.username));
 END
 $$
 DELIMITER ;
 DELIMITER $$
-CREATE TRIGGER `LogFarmUpdate` AFTER UPDATE ON `farm` FOR EACH ROW BEGIN
-  INSERT INTO logs (user_id, action, table_name, logged_at, details)
-  VALUES (NEW.user_id, 'UPDATE', 'Farm', NOW(), CONCAT('FarmID: ', NEW.farm_id, ', FarmName: ', NEW.farm_name));
+CREATE TRIGGER `LogUpdateFarmer` AFTER UPDATE ON `farmer` FOR EACH ROW BEGIN
+  INSERT INTO Logs (user_email,action,table_name,logged_at,details)
+  VALUES (NEW.email, 'UPDATE PROFILE', 'Farmer', NOW(), CONCAT('Farmer Update their Info: ', NEW.username));
+END
+$$
+DELIMITER ;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `farmermessages`
+--
+
+CREATE TABLE `farmermessages` (
+  `message_id` int(11) NOT NULL,
+  `sender_email` varchar(255) DEFAULT NULL,
+  `recipient_email` varchar(255) DEFAULT NULL,
+  `title` varchar(255) NOT NULL,
+  `content` text NOT NULL,
+  `sent_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `type` enum('information','pestOutbreak','diseaseOutbreak','farmProgress','other') NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Triggers `farmermessages`
+--
+DELIMITER $$
+CREATE TRIGGER `LogDeleteFarmerMessages` BEFORE DELETE ON `farmermessages` FOR EACH ROW BEGIN
+  INSERT INTO Logs (user_email,action,table_name,logged_at,details)
+  VALUES (OLD.sender_email, 'DELETE MESSAGE', 'FarmerMessages', NOW(), CONCAT('Farmer Deleted Message to: ', OLD.recipient_email));
+END
+$$
+DELIMITER ;
+DELIMITER $$
+CREATE TRIGGER `LogInsertFarmerMessages` AFTER INSERT ON `farmermessages` FOR EACH ROW BEGIN
+  INSERT INTO Logs (user_email,action,table_name,logged_at,details)
+  VALUES (NEW.sender_email, 'SENT MESSAGE', 'FarmerMessages', NOW(), CONCAT('Farmer Messaged Veo: ', NEW.recipient_email));
+END
+$$
+DELIMITER ;
+DELIMITER $$
+CREATE TRIGGER `LogUpdateFarmerMessages` AFTER UPDATE ON `farmermessages` FOR EACH ROW BEGIN
+  INSERT INTO Logs (user_email,action,table_name,logged_at,details)
+  VALUES (NEW.sender_email, 'UPDATE MESSAGE', 'FarmerMessages', NOW(), CONCAT('Farmer Message Updated for: ', NEW.recipient_email));
 END
 $$
 DELIMITER ;
@@ -146,7 +185,7 @@ DELIMITER ;
 
 CREATE TABLE `logs` (
   `log_id` int(11) NOT NULL,
-  `user_id` int(11) DEFAULT NULL,
+  `user_email` varchar(255) DEFAULT NULL,
   `action` varchar(255) NOT NULL,
   `table_name` varchar(255) DEFAULT NULL,
   `logged_at` datetime NOT NULL DEFAULT current_timestamp(),
@@ -156,13 +195,68 @@ CREATE TABLE `logs` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `messages`
+-- Table structure for table `residence`
 --
 
-CREATE TABLE `messages` (
+CREATE TABLE `residence` (
+  `residence_id` varchar(255) NOT NULL,
+  `village_name` varchar(255) NOT NULL,
+  `district_name` varchar(255) NOT NULL,
+  `region_name` varchar(255) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `veo`
+--
+
+CREATE TABLE `veo` (
+  `username` varchar(255) NOT NULL,
+  `password` varchar(255) NOT NULL,
+  `first_name` varchar(255) DEFAULT NULL,
+  `last_name` varchar(255) DEFAULT NULL,
+  `job_title` varchar(255) DEFAULT NULL,
+  `residence_id` varchar(255) DEFAULT NULL,
+  `phone_number` varchar(20) DEFAULT NULL,
+  `email` varchar(255) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Triggers `veo`
+--
+DELIMITER $$
+CREATE TRIGGER `LogDeleteVeo` BEFORE DELETE ON `veo` FOR EACH ROW BEGIN
+  INSERT INTO Logs (user_email,action,table_name,logged_at,details)
+  VALUES (OLD.email, 'DELETE ACCOUNT', 'Veo', NOW(), CONCAT('Veo Deleted Account: ', OLD.username));
+END
+$$
+DELIMITER ;
+DELIMITER $$
+CREATE TRIGGER `LogInsertVeo` AFTER INSERT ON `veo` FOR EACH ROW BEGIN
+  INSERT INTO Logs (user_email,action,table_name,logged_at,details)
+  VALUES (NEW.email, 'REGISTER', 'Veo', NOW(), CONCAT('New Veo Registered: ', NEW.username));
+END
+$$
+DELIMITER ;
+DELIMITER $$
+CREATE TRIGGER `LogUpdateVeo` AFTER UPDATE ON `veo` FOR EACH ROW BEGIN
+  INSERT INTO Logs (user_email,action,table_name,logged_at,details)
+  VALUES (NEW.email, 'UPDATE PROFILE', 'Veo', NOW(), CONCAT('Veo Update their Info: ', NEW.username));
+END
+$$
+DELIMITER ;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `veomessages`
+--
+
+CREATE TABLE `veomessages` (
   `message_id` int(11) NOT NULL,
-  `sender_id` int(11) DEFAULT NULL,
-  `recipient_id` int(11) DEFAULT NULL,
+  `sender_email` varchar(255) DEFAULT NULL,
+  `recipient_email` varchar(255) DEFAULT NULL,
   `title` varchar(255) NOT NULL,
   `content` text NOT NULL,
   `sent_at` datetime NOT NULL DEFAULT current_timestamp(),
@@ -170,165 +264,93 @@ CREATE TABLE `messages` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
--- Triggers `messages`
+-- Triggers `veomessages`
 --
 DELIMITER $$
-CREATE TRIGGER `LogDeleteMessages` BEFORE DELETE ON `messages` FOR EACH ROW BEGIN
-  INSERT INTO Logs (user_id,action,table_name,logged_at,details)
-  VALUES (OLD.sender_id, 'DELETE', 'messages', NOW(), CONCAT('messages: ', OLD.type));
+CREATE TRIGGER `LogDeleteVeoMessages` BEFORE DELETE ON `veomessages` FOR EACH ROW BEGIN
+  INSERT INTO Logs (user_email,action,table_name,logged_at,details)
+  VALUES (OLD.sender_email, 'DELETE MESSAGE', 'VeoMessages', NOW(), CONCAT('Veo Deleted Message to: ', OLD.recipient_email));
 END
 $$
 DELIMITER ;
 DELIMITER $$
-CREATE TRIGGER `LogInsertMessages` AFTER INSERT ON `messages` FOR EACH ROW BEGIN
-  INSERT INTO Logs (user_id,action,table_name,logged_at,details)
-  VALUES (NEW.sender_id, 'INSERT', 'messages', NOW(), CONCAT('messages: ', NEW.type));
+CREATE TRIGGER `LogInsertVeoMessages` AFTER INSERT ON `veomessages` FOR EACH ROW BEGIN  INSERT INTO Logs (user_email,action,table_name,logged_at,details)
+  VALUES (NEW.sender_email, 'SENT MESSAGE', 'VeoMessages', NOW(), CONCAT('Veo Messaged Farmer: ', NEW.recipient_email));
 END
 $$
 DELIMITER ;
 DELIMITER $$
-CREATE TRIGGER `LogUpdateMessages` AFTER UPDATE ON `messages` FOR EACH ROW BEGIN
-  INSERT INTO Logs (user_id,action,table_name,logged_at,details)
-  VALUES (NEW.sender_id, 'UPDATE', 'messages', NOW(), CONCAT('messages: ', NEW.type));
+CREATE TRIGGER `LogUpdateVeoMessages` AFTER UPDATE ON `veomessages` FOR EACH ROW BEGIN
+  INSERT INTO Logs (user_email,action,table_name,logged_at,details)
+  VALUES (NEW.sender_email, 'UPDATE MESSAGE', 'VeoMessages', NOW(), CONCAT('Veo Message Updated for: ', NEW.recipient_email));
 END
 $$
 DELIMITER ;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `regions`
---
-
-CREATE TABLE `regions` (
-  `region_id` int(11) NOT NULL,
-  `region_name` varchar(255) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `users`
---
-
-CREATE TABLE `users` (
-  `user_id` int(11) NOT NULL,
-  `user_type` enum('farmer','VEO') NOT NULL,
-  `username` varchar(255) NOT NULL,
-  `password` varchar(255) NOT NULL,
-  `first_name` varchar(255) DEFAULT NULL,
-  `last_name` varchar(255) DEFAULT NULL,
-  `village_id` int(11) DEFAULT NULL,
-  `phone_number` varchar(20) DEFAULT NULL,
-  `email` varchar(255) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
---
--- Triggers `users`
---
-DELIMITER $$
-CREATE TRIGGER `LogDeleteUsers` BEFORE DELETE ON `users` FOR EACH ROW BEGIN
-  INSERT INTO Logs (user_id,action,table_name,logged_at,details)
-  VALUES (OLD.user_id, 'DELETE', 'Users', NOW(), CONCAT('User: ', OLD.user_type, ' - ', OLD.username));
-END
-$$
-DELIMITER ;
-DELIMITER $$
-CREATE TRIGGER `LogInsertUsers` AFTER INSERT ON `users` FOR EACH ROW BEGIN
-  INSERT INTO Logs (user_id,action,table_name,logged_at,details)
-  VALUES (NEW.user_id, 'INSERT', 'Users', NOW(), CONCAT('User: ', NEW.user_type, ' - ', NEW.username));
-END
-$$
-DELIMITER ;
-DELIMITER $$
-CREATE TRIGGER `LogUpdateUsers` AFTER UPDATE ON `users` FOR EACH ROW BEGIN
-  INSERT INTO Logs (user_id,action,table_name,logged_at,details)
-  VALUES (NEW.user_id, 'UPDATE', 'Users', NOW(), CONCAT('User: ', NEW.user_type, ' - ', NEW.username));
-END
-$$
-DELIMITER ;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `villages`
---
-
-CREATE TABLE `villages` (
-  `village_id` int(11) NOT NULL,
-  `village_name` varchar(255) NOT NULL,
-  `district_id` int(11) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Indexes for dumped tables
 --
 
 --
--- Indexes for table `districts`
---
-ALTER TABLE `districts`
-  ADD PRIMARY KEY (`district_id`),
-  ADD KEY `region_id` (`region_id`);
-
---
 -- Indexes for table `farm`
 --
 ALTER TABLE `farm`
-  ADD PRIMARY KEY (`farm_id`),
-  ADD KEY `user_id` (`user_id`);
+  ADD PRIMARY KEY (`farm_id`);
+
+--
+-- Indexes for table `farmer`
+--
+ALTER TABLE `farmer`
+  ADD PRIMARY KEY (`email`),
+  ADD UNIQUE KEY `username` (`username`),
+  ADD KEY `residence_id` (`residence_id`),
+  ADD KEY `farm_id` (`farm_id`);
+
+--
+-- Indexes for table `farmermessages`
+--
+ALTER TABLE `farmermessages`
+  ADD PRIMARY KEY (`message_id`),
+  ADD KEY `sender_email` (`sender_email`),
+  ADD KEY `recipient_email` (`recipient_email`);
 
 --
 -- Indexes for table `logs`
 --
 ALTER TABLE `logs`
-  ADD PRIMARY KEY (`log_id`),
-  ADD KEY `user_id` (`user_id`);
+  ADD PRIMARY KEY (`log_id`);
 
 --
--- Indexes for table `messages`
+-- Indexes for table `residence`
 --
-ALTER TABLE `messages`
-  ADD PRIMARY KEY (`message_id`),
-  ADD KEY `sender_id` (`sender_id`),
-  ADD KEY `recipient_id` (`recipient_id`);
+ALTER TABLE `residence`
+  ADD PRIMARY KEY (`residence_id`);
 
 --
--- Indexes for table `regions`
+-- Indexes for table `veo`
 --
-ALTER TABLE `regions`
-  ADD PRIMARY KEY (`region_id`);
-
---
--- Indexes for table `users`
---
-ALTER TABLE `users`
-  ADD PRIMARY KEY (`user_id`),
+ALTER TABLE `veo`
+  ADD PRIMARY KEY (`email`),
   ADD UNIQUE KEY `username` (`username`),
-  ADD KEY `village_id` (`village_id`);
+  ADD KEY `residence_id` (`residence_id`);
 
 --
--- Indexes for table `villages`
+-- Indexes for table `veomessages`
 --
-ALTER TABLE `villages`
-  ADD PRIMARY KEY (`village_id`),
-  ADD KEY `district_id` (`district_id`);
+ALTER TABLE `veomessages`
+  ADD PRIMARY KEY (`message_id`),
+  ADD KEY `sender_email` (`sender_email`),
+  ADD KEY `recipient_email` (`recipient_email`);
 
 --
 -- AUTO_INCREMENT for dumped tables
 --
 
 --
--- AUTO_INCREMENT for table `districts`
+-- AUTO_INCREMENT for table `farmermessages`
 --
-ALTER TABLE `districts`
-  MODIFY `district_id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `farm`
---
-ALTER TABLE `farm`
-  MODIFY `farm_id` int(11) NOT NULL AUTO_INCREMENT;
+ALTER TABLE `farmermessages`
+  MODIFY `message_id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `logs`
@@ -337,69 +359,41 @@ ALTER TABLE `logs`
   MODIFY `log_id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `messages`
+-- AUTO_INCREMENT for table `veomessages`
 --
-ALTER TABLE `messages`
+ALTER TABLE `veomessages`
   MODIFY `message_id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `regions`
---
-ALTER TABLE `regions`
-  MODIFY `region_id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `users`
---
-ALTER TABLE `users`
-  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `villages`
---
-ALTER TABLE `villages`
-  MODIFY `village_id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- Constraints for dumped tables
 --
 
 --
--- Constraints for table `districts`
+-- Constraints for table `farmer`
 --
-ALTER TABLE `districts`
-  ADD CONSTRAINT `districts_ibfk_1` FOREIGN KEY (`region_id`) REFERENCES `regions` (`region_id`);
+ALTER TABLE `farmer`
+  ADD CONSTRAINT `farmer_ibfk_1` FOREIGN KEY (`residence_id`) REFERENCES `residence` (`residence_id`),
+  ADD CONSTRAINT `farmer_ibfk_2` FOREIGN KEY (`farm_id`) REFERENCES `farm` (`farm_id`);
 
 --
--- Constraints for table `farm`
+-- Constraints for table `farmermessages`
 --
-ALTER TABLE `farm`
-  ADD CONSTRAINT `farm_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`);
+ALTER TABLE `farmermessages`
+  ADD CONSTRAINT `farmermessages_ibfk_1` FOREIGN KEY (`sender_email`) REFERENCES `farmer` (`email`),
+  ADD CONSTRAINT `farmermessages_ibfk_2` FOREIGN KEY (`recipient_email`) REFERENCES `veo` (`email`);
 
 --
--- Constraints for table `logs`
+-- Constraints for table `veo`
 --
-ALTER TABLE `logs`
-  ADD CONSTRAINT `logs_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`);
+ALTER TABLE `veo`
+  ADD CONSTRAINT `veo_ibfk_1` FOREIGN KEY (`residence_id`) REFERENCES `residence` (`residence_id`);
 
 --
--- Constraints for table `messages`
+-- Constraints for table `veomessages`
 --
-ALTER TABLE `messages`
-  ADD CONSTRAINT `messages_ibfk_1` FOREIGN KEY (`sender_id`) REFERENCES `users` (`user_id`),
-  ADD CONSTRAINT `messages_ibfk_2` FOREIGN KEY (`recipient_id`) REFERENCES `users` (`user_id`);
-
---
--- Constraints for table `users`
---
-ALTER TABLE `users`
-  ADD CONSTRAINT `users_ibfk_1` FOREIGN KEY (`village_id`) REFERENCES `villages` (`village_id`);
-
---
--- Constraints for table `villages`
---
-ALTER TABLE `villages`
-  ADD CONSTRAINT `villages_ibfk_1` FOREIGN KEY (`district_id`) REFERENCES `districts` (`district_id`);
+ALTER TABLE `veomessages`
+  ADD CONSTRAINT `veomessages_ibfk_1` FOREIGN KEY (`sender_email`) REFERENCES `veo` (`email`),
+  ADD CONSTRAINT `veomessages_ibfk_2` FOREIGN KEY (`recipient_email`) REFERENCES `farmer` (`email`);
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
