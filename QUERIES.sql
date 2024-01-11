@@ -1,106 +1,112 @@
-CREATE TABLE Users (
-    user_id INT PRIMARY KEY AUTO_INCREMENT,
-    user_type ENUM('farmer', 'VEO') NOT NULL,
+CREATE DATABASE agriculture;
+
+USE agriculture;
+
+CREATE TABLE Residence (
+    residence_id VARCHAR(255) PRIMARY KEY,
+    village_name VARCHAR(255) NOT NULL,
+    district_name VARCHAR(255) NOT NULL,
+    region_name VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE Farm (
+    farmer_email VARCHAR(255) NOT NULL,
+    farm_name VARCHAR(100) NOT NULL,
+    farm_id VARCHAR(255) PRIMARY KEY,
+    crop_type VARCHAR(255),
+    size VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE Veo (
     username VARCHAR(255) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
     first_name VARCHAR(255),
     last_name VARCHAR(255),
-    village_id INT,
+    job_title VARCHAR(255),
+    residence_id VARCHAR(255),
     phone_number VARCHAR(20),
-    email VARCHAR(255),
-    FOREIGN KEY (village_id) REFERENCES Villages(village_id)
+    email VARCHAR(255) PRIMARY KEY,
+    FOREIGN KEY (residence_id) REFERENCES Residence(residence_id)
 );
 
-CREATE TABLE Villages (
-    village_id INT PRIMARY KEY AUTO_INCREMENT,
-    village_name VARCHAR(255) NOT NULL,
-    district_id INT,
-    FOREIGN KEY (district_id) REFERENCES Districts(district_id)
+CREATE TABLE Farmer (
+    username VARCHAR(255) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    first_name VARCHAR(255),
+    last_name VARCHAR(255),
+    residence_id VARCHAR(255),
+    farm_id VARCHAR(255),
+    phone_number VARCHAR(20),
+    email VARCHAR(255) PRIMARY KEY,
+    FOREIGN KEY (residence_id) REFERENCES Residence(residence_id),
+    FOREIGN KEY (farm_id) REFERENCES Farm(farm_id)
 );
 
-CREATE TABLE Districts (
-    district_id INT PRIMARY KEY AUTO_INCREMENT,
-    district_name VARCHAR(255) NOT NULL,
-    region_id INT,
-    FOREIGN KEY (region_id) REFERENCES Regions(region_id)
-);
-
-CREATE TABLE Regions (
-    region_id INT PRIMARY KEY AUTO_INCREMENT,
-    region_name VARCHAR(255) NOT NULL
-);
-
-CREATE TABLE Messages (
+CREATE TABLE FarmerMessages (
     message_id INT PRIMARY KEY AUTO_INCREMENT,
-    sender_id INT,
-    recipient_id INT,
+    sender_email VARCHAR(255),
+    recipient_email VARCHAR(255),
     title VARCHAR(255) NOT NULL,
     content TEXT NOT NULL,
     sent_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     type ENUM('information', 'pestOutbreak', 'diseaseOutbreak', 'farmProgress', 'other') NOT NULL,
-    FOREIGN KEY (sender_id) REFERENCES Users(user_id),
-    FOREIGN KEY (recipient_id) REFERENCES Users(user_id)
+    FOREIGN KEY (sender_email) REFERENCES Farmer(email),
+    FOREIGN KEY (recipient_email) REFERENCES Veo(email)
+);
+
+CREATE TABLE VeoMessages (
+    message_id INT PRIMARY KEY AUTO_INCREMENT,
+    sender_email VARCHAR(255),
+    recipient_email VARCHAR(255),
+    title VARCHAR(255) NOT NULL,
+    content TEXT NOT NULL,
+    sent_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    type ENUM('information', 'pestOutbreak', 'diseaseOutbreak', 'farmProgress', 'other') NOT NULL,
+    FOREIGN KEY (sender_email) REFERENCES Veo(email),
+    FOREIGN KEY (recipient_email) REFERENCES Farmer(email)
 );
 
 CREATE TABLE Logs (
     log_id INT PRIMARY KEY AUTO_INCREMENT,
-    user_id INT,
+    user_email VARCHAR(255),
     action VARCHAR(255) NOT NULL,
     table_name VARCHAR(255),
     logged_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    details VARCHAR(255),
-    FOREIGN KEY (user_id) REFERENCES Users(user_id)
-);
-
-
-CREATE TABLE Farm (
-    farm_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
-    farm_name VARCHAR(100) NOT NULL,
-    crop_type VARCHAR(100),
-    size DECIMAL(4,2) NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES Users(user_id)
+    details VARCHAR(255)
 );
 
 
 -- Triggers for logging
 DELIMITER //
 
-CREATE TRIGGER LogInsertMessages
-AFTER INSERT ON messages
+CREATE TRIGGER LogInsertFarmerMessages
+AFTER INSERT ON FarmerMessages
 FOR EACH ROW
 BEGIN
-  INSERT INTO Logs (user_id,action,table_name,logged_at,details)
-  VALUES (NEW.sender_id, 'INSERT', 'messages', NOW(), CONCAT('messages: ', NEW.type));
+  INSERT INTO Logs (user_email,action,table_name,logged_at,details)
+  VALUES (NEW.sender_email, 'SENT MESSAGE', 'FarmerMessages', NOW(), CONCAT('Farmer Messaged Veo: ', NEW.recipient_email));
 END//
 
-CREATE TRIGGER LogInsertUsers
-AFTER INSERT ON Users
+CREATE TRIGGER LogInsertVeoMessages
+AFTER INSERT ON VeoMessages
 FOR EACH ROW
-BEGIN
-  INSERT INTO Logs (user_id,action,table_name,logged_at,details)
-  VALUES (NEW.user_id, 'INSERT', 'Users', NOW(), CONCAT('User: ', NEW.user_type, ' - ', NEW.username));
+BEGIN  INSERT INTO Logs (user_email,action,table_name,logged_at,details)
+  VALUES (NEW.sender_email, 'SENT MESSAGE', 'VeoMessages', NOW(), CONCAT('Veo Messaged Farmer: ', NEW.recipient_email));
 END//
 
-DELIMITER ;
-
-
-DELIMITER //
-
-CREATE TRIGGER LogUpdateMessages
-AFTER UPDATE ON messages
+CREATE TRIGGER LogInsertFarmer
+AFTER INSERT ON Farmer
 FOR EACH ROW
 BEGIN
-  INSERT INTO Logs (user_id,action,table_name,logged_at,details)
-  VALUES (NEW.sender_id, 'UPDATE', 'messages', NOW(), CONCAT('messages: ', NEW.type));
+  INSERT INTO Logs (user_email,action,table_name,logged_at,details)
+  VALUES (NEW.email, 'REGISTER', 'Farmer', NOW(), CONCAT('New Farmer Registered: ', NEW.username));
 END//
-
-CREATE TRIGGER LogUpdateUsers
-AFTER UPDATE ON Users
+CREATE TRIGGER LogInsertVeo
+AFTER INSERT ON Veo
 FOR EACH ROW
 BEGIN
-  INSERT INTO Logs (user_id,action,table_name,logged_at,details)
-  VALUES (NEW.user_id, 'UPDATE', 'Users', NOW(), CONCAT('User: ', NEW.user_type, ' - ', NEW.username));
+  INSERT INTO Logs (user_email,action,table_name,logged_at,details)
+  VALUES (NEW.email, 'REGISTER', 'Veo', NOW(), CONCAT('New Veo Registered: ', NEW.username));
 END//
 
 DELIMITER ;
@@ -108,61 +114,93 @@ DELIMITER ;
 
 DELIMITER //
 
-CREATE TRIGGER LogDeleteMessages
-BEFORE DELETE ON messages
+CREATE TRIGGER LogUpdateFarmerMessages
+AFTER UPDATE ON FarmerMessages
 FOR EACH ROW
 BEGIN
-  INSERT INTO Logs (user_id,action,table_name,logged_at,details)
-  VALUES (OLD.sender_id, 'DELETE', 'messages', NOW(), CONCAT('messages: ', OLD.type));
+  INSERT INTO Logs (user_email,action,table_name,logged_at,details)
+  VALUES (NEW.sender_email, 'UPDATE MESSAGE', 'FarmerMessages', NOW(), CONCAT('Farmer Message Updated for: ', NEW.recipient_email));
 END//
 
-CREATE TRIGGER LogDeleteUsers
-BEFORE DELETE ON Users
+CREATE TRIGGER LogUpdateVeoMessages
+AFTER UPDATE ON VeoMessages
 FOR EACH ROW
 BEGIN
-  INSERT INTO Logs (user_id,action,table_name,logged_at,details)
-  VALUES (OLD.user_id, 'DELETE', 'Users', NOW(), CONCAT('User: ', OLD.user_type, ' - ', OLD.username));
+  INSERT INTO Logs (user_email,action,table_name,logged_at,details)
+  VALUES (NEW.sender_email, 'UPDATE MESSAGE', 'VeoMessages', NOW(), CONCAT('Veo Message Updated for: ', NEW.recipient_email));
+END//
+
+CREATE TRIGGER LogUpdateFarmer
+AFTER UPDATE ON Farmer
+FOR EACH ROW
+BEGIN
+  INSERT INTO Logs (user_email,action,table_name,logged_at,details)
+  VALUES (NEW.email, 'UPDATE PROFILE', 'Farmer', NOW(), CONCAT('Farmer Update their Info: ', NEW.username));
+END//
+
+CREATE TRIGGER LogUpdateVeo
+AFTER UPDATE ON Veo
+FOR EACH ROW
+BEGIN
+  INSERT INTO Logs (user_email,action,table_name,logged_at,details)
+  VALUES (NEW.email, 'UPDATE PROFILE', 'Veo', NOW(), CONCAT('Veo Update their Info: ', NEW.username));
 END//
 
 DELIMITER ;
 
 
--- Triggers for logging on the Farm table
 DELIMITER //
 
-CREATE TRIGGER LogFarmInsert
-AFTER INSERT ON Farm
+CREATE TRIGGER LogDeleteFarmerMessages
+BEFORE DELETE ON FarmerMessages
 FOR EACH ROW
 BEGIN
-  INSERT INTO logs (user_id, action, table_name, logged_at, details)
-  VALUES (NEW.user_id, 'INSERT', 'Farm', NOW(), CONCAT('FarmID: ', NEW.farm_id, ', FarmName: ', NEW.farm_name));
-END//  
+  INSERT INTO Logs (user_email,action,table_name,logged_at,details)
+  VALUES (OLD.sender_email, 'DELETE MESSAGE', 'FarmerMessages', NOW(), CONCAT('Farmer Deleted Message to: ', OLD.recipient_email));
+END//
 
-CREATE TRIGGER LogFarmUpdate
-AFTER UPDATE ON Farm
+CREATE TRIGGER LogDeleteVeoMessages
+BEFORE DELETE ON VeoMessages
 FOR EACH ROW
 BEGIN
-  INSERT INTO logs (user_id, action, table_name, logged_at, details)
-  VALUES (NEW.user_id, 'UPDATE', 'Farm', NOW(), CONCAT('FarmID: ', NEW.farm_id, ', FarmName: ', NEW.farm_name));
-END//  
+  INSERT INTO Logs (user_email,action,table_name,logged_at,details)
+  VALUES (OLD.sender_email, 'DELETE MESSAGE', 'VeoMessages', NOW(), CONCAT('Veo Deleted Message to: ', OLD.recipient_email));
+END//
 
-CREATE TRIGGER LogFarmDelete
-BEFORE DELETE ON Farm
+CREATE TRIGGER LogDeleteFarmer
+BEFORE DELETE ON Farmer
 FOR EACH ROW
 BEGIN
-  INSERT INTO logs (user_id, action, table_name, logged_at, details)
-  VALUES (OLD.user_id, 'DELETE', 'Farm', NOW(), CONCAT('FarmID: ', OLD.farm_id, ', FarmName: ', OLD.farm_name));
-END//  
+  INSERT INTO Logs (user_email,action,table_name,logged_at,details)
+  VALUES (OLD.email, 'DELETE ACCOUNT', 'Farmer', NOW(), CONCAT('Farmer Deleted Account: ', OLD.username));
+END//
+
+CREATE TRIGGER LogDeleteVeo
+BEFORE DELETE ON Veo
+FOR EACH ROW
+BEGIN
+  INSERT INTO Logs (user_email,action,table_name,logged_at,details)
+  VALUES (OLD.email, 'DELETE ACCOUNT', 'Veo', NOW(), CONCAT('Veo Deleted Account: ', OLD.username));
+END//
 
 DELIMITER ;
+
 
 -- function to validate user authentication to the agriculture system
 DELIMITER //
-CREATE FUNCTION ValidatePassword(username VARCHAR(50), password VARCHAR(255),usertype VARCHAR(50))
+CREATE FUNCTION ValidatePasswordFarmer(email VARCHAR(255), password VARCHAR(255))
 RETURNS BOOLEAN
 BEGIN
     DECLARE stored_hash CHAR(60);
-    SELECT password INTO stored_hash FROM Users WHERE type = usertype AND username = username;
+    SELECT password INTO stored_hash FROM Farmer WHERE email = email;
+    RETURN stored_hash = SHA2(password, 512);
+END //
+
+CREATE FUNCTION ValidatePasswordVeo(email VARCHAR(255), password VARCHAR(255))
+RETURNS BOOLEAN
+BEGIN
+    DECLARE stored_hash CHAR(60);
+    SELECT password INTO stored_hash FROM Veo WHERE email = email;
     RETURN stored_hash = SHA2(password, 512);
 END //
 DELIMITER ;
@@ -170,14 +208,27 @@ DELIMITER ;
 
 -- Create a stored procedure for user authentication
 DELIMITER $$
-CREATE PROCEDURE AuthenticateUser(
-  IN p_username VARCHAR(255),
+CREATE PROCEDURE AuthenticateFarmer(
+  IN p_email VARCHAR(255),
   IN p_password VARCHAR(255),
-  IN user_type ENUM('Farmer', 'VEO'),
   OUT is_authenticated BOOLEAN
 )
 BEGIN
-    IF ValidatePassword(p_username, p_password,user_type) THEN  
+    IF ValidatePasswordFarmer(p_email, p_password) THEN  
+       SET is_authenticated = TRUE;
+    END IF;
+    IF is_authenticated IS NULL THEN
+        SET is_authenticated = FALSE;
+  END IF;
+END $$
+
+CREATE PROCEDURE AuthenticateVeo(
+  IN p_email VARCHAR(255),
+  IN p_password VARCHAR(255),
+  OUT is_authenticated BOOLEAN
+)
+BEGIN
+    IF ValidatePasswordVeo(p_email, p_password) THEN  
        SET is_authenticated = TRUE;
     END IF;
     IF is_authenticated IS NULL THEN
@@ -191,87 +242,58 @@ DELIMITER ;
 -- PROCEDURES TO INSERT DATA INTO TABLES
 DELIMITER //
 
-CREATE PROCEDURE InsertUser(
-    IN p_user_type ENUM('farmer', 'VEO'),
+CREATE PROCEDURE InsertFarmer(
     IN p_username VARCHAR(255),
     IN p_password VARCHAR(255),
     IN p_first_name VARCHAR(255),
     IN p_last_name VARCHAR(255),
-    IN p_village_id INT,
+    IN p_residence_id VARCHAR(255),
+    IN p_farm_id VARCHAR(255),    
     IN p_phone_number VARCHAR(20),
     IN p_email VARCHAR(255)
 )
 BEGIN
-    INSERT INTO Users (user_type, username, password, first_name, last_name, village_id, phone_number, email)
-    VALUES (p_user_type, p_username, p_password, p_first_name, p_last_name, p_village_id, p_phone_number, p_email);
+    INSERT INTO Farmer (farm_id, username, password, first_name, last_name, residence_id, phone_number, email)
+    VALUES (p_farm_id, p_username, p_password, p_first_name, p_last_name, p_residence_id, p_phone_number, p_email);
 END//
 
-CREATE PROCEDURE InsertVillage(
-    IN p_village_name VARCHAR(255),
-    IN p_district_id INT
+CREATE PROCEDURE InsertVeo(
+    IN p_username VARCHAR(255),
+    IN p_password VARCHAR(255),
+    IN p_first_name VARCHAR(255),
+    IN p_last_name VARCHAR(255),
+    IN p_job_title VARCHAR(255),    
+    IN p_residence_id VARCHAR(255),    
+    IN p_phone_number VARCHAR(20),
+    IN p_email VARCHAR(255)
 )
 BEGIN
-    INSERT INTO Villages (village_name, district_id)
-    VALUES (p_village_name, p_district_id);
+    INSERT INTO Veo (username, password, first_name, last_name, job_title, residence_id, phone_number, email)
+    VALUES (p_username, p_password, p_first_name, p_last_name, p_job_title, p_residence_id, p_phone_number, p_email);
 END//
 
-CREATE PROCEDURE InsertDistrict(
-    IN p_district_name VARCHAR(255),
-    IN p_region_id INT
-)
-BEGIN
-    INSERT INTO Districts (district_name, region_id)
-    VALUES (p_district_name, p_region_id);
-END//
 
-CREATE PROCEDURE InsertRegion(
-    IN p_region_name VARCHAR(255)
-)
-BEGIN
-    INSERT INTO Regions (region_name)
-    VALUES (p_region_name);
-END//
-
-CREATE PROCEDURE InsertMessage(
-    IN p_sender_id INT,
-    IN p_recipient_id INT,
+CREATE PROCEDURE InsertFarmerMessage(
+    IN p_sender_email VARCHAR(255),
+    IN p_recipient_email VARCHAR(255),
     IN p_title VARCHAR(255),
     IN p_content TEXT,
     IN p_type ENUM('information', 'pestOutbreak', 'diseaseOutbreak', 'farmProgress', 'other')
 )
 BEGIN
-    INSERT INTO Messages (sender_id, recipient_id, title, content, type)
-    VALUES (p_sender_id, p_recipient_id, p_title, p_content, p_type);
+    INSERT INTO FarmerMessages (sender_email, recipient_email, title, content, type)
+    VALUES (p_sender_email, p_recipient_email, p_title, p_content, p_type);
 END//
-
-CREATE PROCEDURE InsertUserAndFarm(
-    IN p_user_type ENUM('farmer', 'VEO'),
-    IN p_username VARCHAR(255),
-    IN p_password VARCHAR(255),
-    IN p_first_name VARCHAR(255),
-    IN p_last_name VARCHAR(255),
-    IN p_village_id INT,
-    IN p_phone_number VARCHAR(20),
-    IN p_email VARCHAR(255),
-    IN p_farm_name VARCHAR(100),
-    IN p_crop_type VARCHAR(100),
-    IN p_size DECIMAL(4,2)
+CREATE PROCEDURE InsertVeoMessage(
+    IN p_sender_email VARCHAR(255),
+    IN p_recipient_email VARCHAR(255),
+    IN p_title VARCHAR(255),
+    IN p_content TEXT,
+    IN p_type ENUM('information', 'pestOutbreak', 'diseaseOutbreak', 'farmProgress', 'other')
 )
 BEGIN
-    DECLARE user_id INT;
-
-    -- Insert into Users table
-    INSERT INTO Users (user_type, username, password, first_name, last_name, village_id, phone_number, email)
-    VALUES (p_user_type, p_username, p_password, p_first_name, p_last_name, p_village_id, p_phone_number, p_email);
-
-    -- Get the user_id of the inserted user
-    SET user_id = LAST_INSERT_ID();
-
-    -- Insert into Farm table if user_type is 'farmer'
-    IF p_user_type = 'farmer' THEN
-        INSERT INTO Farm (user_id, farm_name, crop_type, size)
-        VALUES (user_id, p_farm_name, p_crop_type, p_size);
-    END IF;
+    INSERT INTO VeoMessages (sender_email, recipient_email, title, content, type)
+    VALUES (p_sender_email, p_recipient_email, p_title, p_content, p_type);
 END//
 
 DELIMITER ;
