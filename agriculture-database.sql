@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jan 11, 2024 at 10:50 PM
+-- Generation Time: Jan 11, 2024 at 11:30 PM
 -- Server version: 10.4.24-MariaDB
 -- PHP Version: 8.1.6
 
@@ -44,8 +44,11 @@ CREATE DEFINER=`jerry`@`localhost` PROCEDURE `AuthenticateVeo` (IN `p_email` VAR
 END$$
 
 CREATE DEFINER=`jerry`@`localhost` PROCEDURE `InsertFarmer` (IN `p_username` VARCHAR(255), IN `p_password` VARCHAR(255), IN `p_first_name` VARCHAR(255), IN `p_last_name` VARCHAR(255), IN `p_residence_id` VARCHAR(255), IN `p_farm_id` VARCHAR(255), IN `p_phone_number` VARCHAR(20), IN `p_email` VARCHAR(255))   BEGIN
+    DECLARE hashed_password CHAR(64);
+    SET hashed_password = SHA2(p_password, 512);
+
     INSERT INTO Farmer (farm_id, username, password, first_name, last_name, residence_id, phone_number, email)
-    VALUES (p_farm_id, p_username, p_password, p_first_name, p_last_name, p_residence_id, p_phone_number, p_email);
+    VALUES (p_farm_id, p_username, hashed_password, p_first_name, p_last_name, p_residence_id, p_phone_number, p_email);
 END$$
 
 CREATE DEFINER=`jerry`@`localhost` PROCEDURE `InsertFarmerMessage` (IN `p_sender_email` VARCHAR(255), IN `p_recipient_email` VARCHAR(255), IN `p_title` VARCHAR(255), IN `p_content` TEXT, IN `p_type` ENUM('information','pestOutbreak','diseaseOutbreak','farmProgress','other'))   BEGIN
@@ -54,8 +57,11 @@ CREATE DEFINER=`jerry`@`localhost` PROCEDURE `InsertFarmerMessage` (IN `p_sender
 END$$
 
 CREATE DEFINER=`jerry`@`localhost` PROCEDURE `InsertVeo` (IN `p_username` VARCHAR(255), IN `p_password` VARCHAR(255), IN `p_first_name` VARCHAR(255), IN `p_last_name` VARCHAR(255), IN `p_job_title` VARCHAR(255), IN `p_residence_id` VARCHAR(255), IN `p_phone_number` VARCHAR(20), IN `p_email` VARCHAR(255))   BEGIN
+    DECLARE hashed_password CHAR(64);
+    SET hashed_password = SHA2(p_password, 512);
+
     INSERT INTO Veo (username, password, first_name, last_name, job_title, residence_id, phone_number, email)
-    VALUES (p_username, p_password, p_first_name, p_last_name, p_job_title, p_residence_id, p_phone_number, p_email);
+    VALUES (p_username, hashed_password, p_first_name, p_last_name, p_job_title, p_residence_id, p_phone_number, p_email);
 END$$
 
 CREATE DEFINER=`jerry`@`localhost` PROCEDURE `InsertVeoMessage` (IN `p_sender_email` VARCHAR(255), IN `p_recipient_email` VARCHAR(255), IN `p_title` VARCHAR(255), IN `p_content` TEXT, IN `p_type` ENUM('information','pestOutbreak','diseaseOutbreak','farmProgress','other'))   BEGIN
