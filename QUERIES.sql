@@ -191,7 +191,7 @@ DELIMITER //
 CREATE FUNCTION ValidatePasswordFarmer(email VARCHAR(255), password VARCHAR(255))
 RETURNS BOOLEAN
 BEGIN
-    DECLARE stored_hash CHAR(60);
+    DECLARE stored_hash CHAR(64);
     SELECT password INTO stored_hash FROM Farmer WHERE email = email;
     RETURN stored_hash = SHA2(password, 512);
 END //
@@ -199,7 +199,7 @@ END //
 CREATE FUNCTION ValidatePasswordVeo(email VARCHAR(255), password VARCHAR(255))
 RETURNS BOOLEAN
 BEGIN
-    DECLARE stored_hash CHAR(60);
+    DECLARE stored_hash CHAR(64);
     SELECT password INTO stored_hash FROM Veo WHERE email = email;
     RETURN stored_hash = SHA2(password, 512);
 END //
@@ -253,8 +253,11 @@ CREATE PROCEDURE InsertFarmer(
     IN p_email VARCHAR(255)
 )
 BEGIN
+    DECLARE hashed_password CHAR(64);
+    SET hashed_password = SHA2(p_password, 512);
+
     INSERT INTO Farmer (farm_id, username, password, first_name, last_name, residence_id, phone_number, email)
-    VALUES (p_farm_id, p_username, p_password, p_first_name, p_last_name, p_residence_id, p_phone_number, p_email);
+    VALUES (p_farm_id, p_username, hashed_password, p_first_name, p_last_name, p_residence_id, p_phone_number, p_email);
 END//
 
 CREATE PROCEDURE InsertVeo(
@@ -268,8 +271,11 @@ CREATE PROCEDURE InsertVeo(
     IN p_email VARCHAR(255)
 )
 BEGIN
+    DECLARE hashed_password CHAR(64);
+    SET hashed_password = SHA2(p_password, 512);
+
     INSERT INTO Veo (username, password, first_name, last_name, job_title, residence_id, phone_number, email)
-    VALUES (p_username, p_password, p_first_name, p_last_name, p_job_title, p_residence_id, p_phone_number, p_email);
+    VALUES (p_username, hashed_password, p_first_name, p_last_name, p_job_title, p_residence_id, p_phone_number, p_email);
 END//
 
 
