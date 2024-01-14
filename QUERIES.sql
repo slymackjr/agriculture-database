@@ -1,3 +1,4 @@
+-- database agriculture and tables created
 CREATE DATABASE agriculture;
 
 USE agriculture;
@@ -24,7 +25,7 @@ CREATE TABLE Veo (
     last_name VARCHAR(255),
     job_title VARCHAR(255),
     residence_id VARCHAR(255),
-    phone_number VARCHAR(20),
+    phone_number VARCHAR(10),
     email VARCHAR(255) PRIMARY KEY,
     FOREIGN KEY (residence_id) REFERENCES Residence(residence_id)
 );
@@ -36,7 +37,7 @@ CREATE TABLE Farmer (
     last_name VARCHAR(255),
     residence_id VARCHAR(255),
     farm_id VARCHAR(255),
-    phone_number VARCHAR(20),
+    phone_number VARCHAR(10),
     email VARCHAR(255) PRIMARY KEY,
     FOREIGN KEY (residence_id) REFERENCES Residence(residence_id),
     FOREIGN KEY (farm_id) REFERENCES Farm(farm_id)
@@ -76,7 +77,7 @@ CREATE TABLE Logs (
 );
 
 
--- Triggers for logging
+-- Triggers for Logs table for insertion queries.
 DELIMITER //
 
 CREATE TRIGGER LogInsertFarmerMessages
@@ -101,6 +102,7 @@ BEGIN
   INSERT INTO Logs (user_email,action,table_name,logged_at,details)
   VALUES (NEW.email, 'REGISTER', 'Farmer', NOW(), CONCAT('New Farmer Registered: ', NEW.username));
 END//
+
 CREATE TRIGGER LogInsertVeo
 AFTER INSERT ON Veo
 FOR EACH ROW
@@ -109,9 +111,18 @@ BEGIN
   VALUES (NEW.email, 'REGISTER', 'Veo', NOW(), CONCAT('New Veo Registered: ', NEW.username));
 END//
 
+CREATE TRIGGER LogInsertFarm
+AFTER INSERT ON farm
+FOR EACH ROW
+BEGIN
+    INSERT INTO Logs (user_email, action, table_name, logged_at, details)
+    VALUES (NEW.farmer_email, 'INSERT FARM', 'Farm', NOW(), CONCAT('New Farm Inserted: ', NEW.farm_id));
+END//
+
 DELIMITER ;
 
 
+ -- trigger for logging updates in the database
 DELIMITER //
 
 CREATE TRIGGER LogUpdateFarmerMessages
@@ -146,9 +157,18 @@ BEGIN
   VALUES (NEW.email, 'UPDATE PROFILE', 'Veo', NOW(), CONCAT('Veo Update their Info: ', NEW.username));
 END//
 
+CREATE TRIGGER LogUpdateFarm
+AFTER UPDATE ON farm
+FOR EACH ROW
+BEGIN
+    INSERT INTO Logs (user_email, action, table_name, logged_at, details)
+    VALUES (NEW.farmer_email, 'UPDATE FARM', 'Farm', NOW(), CONCAT('Farm Updated: ', NEW.farm_id));
+END//
+
 DELIMITER ;
 
 
+-- trigger for logging deletes
 DELIMITER //
 
 CREATE TRIGGER LogDeleteFarmerMessages
@@ -183,6 +203,14 @@ BEGIN
   VALUES (OLD.email, 'DELETE ACCOUNT', 'Veo', NOW(), CONCAT('Veo Deleted Account: ', OLD.username));
 END//
 
+CREATE TRIGGER LogDeleteFarm
+BEFORE DELETE ON farm
+FOR EACH ROW
+BEGIN
+    INSERT INTO Logs (user_email, action, table_name, logged_at, details)
+    VALUES (OLD.farmer_email, 'DELETE FARM', 'Farm', NOW(), CONCAT('Farm Deleted: ', OLD.farm_id));
+END//
+
 DELIMITER ;
 
 
@@ -206,7 +234,7 @@ END //
 DELIMITER ;
 
 
--- Create a stored procedure for user authentication
+-- stored procedure for user authentication
 DELIMITER $$
 CREATE PROCEDURE AuthenticateFarmer(
   IN p_email VARCHAR(255),
@@ -279,6 +307,19 @@ BEGIN
 END//
 
 
+CREATE PROCEDURE InsertFarm (
+    IN `p_farmer_email` VARCHAR(255),
+    IN `p_farm_name` VARCHAR(100),
+    IN `p_farm_id` VARCHAR(255),
+    IN `p_crop_type` VARCHAR(255),
+    IN `p_size` VARCHAR(255)
+)
+BEGIN
+    INSERT INTO farm (farmer_email, farm_name, farm_id, crop_type, size)
+    VALUES (p_farmer_email, p_farm_name, p_farm_id, p_crop_type, p_size);
+END//
+
+
 CREATE PROCEDURE InsertFarmerMessage(
     IN p_sender_email VARCHAR(255),
     IN p_recipient_email VARCHAR(255),
@@ -304,12 +345,151 @@ END//
 
 DELIMITER ;
 
--- create user jerry to access the database if it fails to import normally
 
-CREATE USER 'jerry'@'localhost' IDENTIFIED BY 'password';
+-- ProcedureS to Update Information in agriculture system
 
-GRANT ALL PRIVILEGES ON *.* TO 'jerry'@'localhost' IDENTIFIED BY 'jerry' WITH GRANT OPTION;
+DELIMITER //
 
-FLUSH PRIVILEGES;
+CREATE PROCEDURE UpdateFarmer (
+    IN `p_email` VARCHAR(255),
+    IN `p_new_first_name` VARCHAR(255),
+    IN `p_new_last_name` VARCHAR(255),
+    IN `p_new_residence_id` VARCHAR(255),
+    IN `p_new_farm_id` VARCHAR(255),
+    IN `p_new_phone_number` VARCHAR(20)
+)
+BEGIN
+    -- Updating Farmer Information
+    UPDATE farmer
+    SET 
+        first_name = IFNULL(p_new_first_name, first_name),
+        last_name = IFNULL(p_new_last_name, last_name),
+        residence_id = IFNULL(p_new_residence_id, residence_id),
+        farm_id = IFNULL(p_new_farm_id, farm_id),
+        phone_number = IFNULL(p_new_phone_number, phone_number)
+    WHERE email = p_email;
+END//
+
+-- Procedure to Update Veo Information
+CREATE PROCEDURE UpdateVeo (
+    IN `p_email` VARCHAR(255),
+    IN `p_new_first_name` VARCHAR(255),
+    IN `p_new_last_name` VARCHAR(255),
+    IN `p_new_job_title` VARCHAR(255),
+    IN `p_new_residence_id` VARCHAR(255),
+    IN `p_new_phone_number` VARCHAR(20)
+)
+BEGIN
+    -- Updating Veo Information
+    UPDATE veo
+    SET 
+        first_name = IFNULL(p_new_first_name, first_name),
+        last_name = IFNULL(p_new_last_name, last_name),
+        job_title = IFNULL(p_new_job_title, job_title),
+        residence_id = IFNULL(p_new_residence_id, residence_id),
+        phone_number = IFNULL(p_new_phone_number, phone_number)
+    WHERE email = p_email;
+END//
+
+CREATE PROCEDURE UpdateVeoMessage (
+    IN `p_message_id` INT,
+    IN `p_title` VARCHAR(255),
+    IN `p_content` TEXT,
+    IN `p_type` ENUM('information','pestOutbreak','diseaseOutbreak','farmProgress','other')
+)
+BEGIN
+    UPDATE VeoMessages
+    SET
+        `title` = COALESCE(p_title, `title`),
+        `content` = COALESCE(p_content, `content`),
+        `type` = COALESCE(p_type, `type`)
+    WHERE
+        `message_id` = p_message_id;
+END//
+
+CREATE PROCEDURE UpdateFarmerMessage (
+    IN `p_message_id` INT,
+    IN `p_title` VARCHAR(255),
+    IN `p_content` TEXT,
+    IN `p_type` ENUM('information','pestOutbreak','diseaseOutbreak','farmProgress','other')
+)
+BEGIN
+    UPDATE FarmerMessages
+    SET
+        `title` = COALESCE(p_title, `title`),
+        `content` = COALESCE(p_content, `content`),
+        `type` = COALESCE(p_type, `type`)
+    WHERE
+        `message_id` = p_message_id;
+END//
+
+CREATE PROCEDURE UpdateFarm (
+    IN `p_farm_id` VARCHAR(255),
+    IN `p_farm_name` VARCHAR(100),
+    IN `p_crop_type` VARCHAR(255),
+    IN `p_size` VARCHAR(255)
+)
+BEGIN
+    UPDATE `farm`
+    SET
+        `farm_name` = COALESCE(p_farm_name, `farm_name`),
+        `crop_type` = COALESCE(p_crop_type, `crop_type`),
+        `size` = COALESCE(p_size, `size`)
+    WHERE
+        `farm_id` = p_farm_id;
+END//
+
+DELIMITER ;
+
+
+-- Procedure to Delete Information in the agriculture database system
+
+DELIMITER //
+
+CREATE PROCEDURE DeleteFarmer (
+    IN `p_email` VARCHAR(255)
+)
+BEGIN
+    DELETE FROM farmer
+    WHERE email = p_email;
+END//
+
+CREATE PROCEDURE DeleteVeo (
+    IN `p_email` VARCHAR(255)
+)
+BEGIN
+    DELETE FROM veo
+    WHERE email = p_email;
+END//
+
+CREATE PROCEDURE DeleteVeoMessage (
+    IN `p_message_id` INT
+)
+BEGIN
+    DELETE FROM VeoMessages
+    WHERE
+        `message_id` = p_message_id;
+END//
+
+CREATE PROCEDURE DeleteFarmerMessage (
+    IN `p_message_id` INT
+)
+BEGIN
+    DELETE FROM FarmerMessages
+    WHERE
+        `message_id` = p_message_id;
+END//
+
+CREATE PROCEDURE DeleteFarm (
+    IN `p_farm_id` VARCHAR(255)
+)
+BEGIN
+    DELETE FROM `farm`
+    WHERE
+        `farm_id` = p_farm_id;
+END//
+
+DELIMITER ;
+
 
 
