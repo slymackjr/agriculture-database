@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jan 14, 2024 at 06:10 PM
+-- Generation Time: Jan 24, 2024 at 05:20 PM
 -- Server version: 10.4.24-MariaDB
 -- PHP Version: 8.1.6
 
@@ -405,3 +405,115 @@ END
 $$
 DELIMITER ;
 
+--
+-- Indexes for dumped tables
+--
+
+--
+-- Indexes for table `farm`
+--
+ALTER TABLE `farm`
+  ADD PRIMARY KEY (`farm_id`);
+
+--
+-- Indexes for table `farmer`
+--
+ALTER TABLE `farmer`
+  ADD PRIMARY KEY (`email`),
+  ADD UNIQUE KEY `username` (`username`),
+  ADD KEY `residence_id` (`residence_id`),
+  ADD KEY `farm_id` (`farm_id`);
+
+--
+-- Indexes for table `farmermessages`
+--
+ALTER TABLE `farmermessages`
+  ADD PRIMARY KEY (`message_id`),
+  ADD KEY `sender_email` (`sender_email`),
+  ADD KEY `recipient_email` (`recipient_email`);
+
+--
+-- Indexes for table `logs`
+--
+ALTER TABLE `logs`
+  ADD PRIMARY KEY (`log_id`);
+
+--
+-- Indexes for table `residence`
+--
+ALTER TABLE `residence`
+  ADD PRIMARY KEY (`residence_id`);
+
+--
+-- Indexes for table `veo`
+--
+ALTER TABLE `veo`
+  ADD PRIMARY KEY (`email`),
+  ADD UNIQUE KEY `username` (`username`),
+  ADD KEY `residence_id` (`residence_id`);
+
+--
+-- Indexes for table `veomessages`
+--
+ALTER TABLE `veomessages`
+  ADD PRIMARY KEY (`message_id`),
+  ADD KEY `sender_email` (`sender_email`),
+  ADD KEY `recipient_email` (`recipient_email`);
+
+--
+-- AUTO_INCREMENT for dumped tables
+--
+
+--
+-- AUTO_INCREMENT for table `farmermessages`
+--
+ALTER TABLE `farmermessages`
+  MODIFY `message_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `logs`
+--
+ALTER TABLE `logs`
+  MODIFY `log_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `veomessages`
+--
+ALTER TABLE `veomessages`
+  MODIFY `message_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- Constraints for dumped tables
+--
+
+--
+-- Constraints for table `farmer`
+--
+ALTER TABLE `farmer`
+  ADD CONSTRAINT `farmer_ibfk_1` FOREIGN KEY (`residence_id`) REFERENCES `residence` (`residence_id`),
+  ADD CONSTRAINT `farmer_ibfk_2` FOREIGN KEY (`farm_id`) REFERENCES `farm` (`farm_id`);
+
+--
+-- Constraints for table `farmermessages`
+--
+ALTER TABLE `farmermessages`
+  ADD CONSTRAINT `farmermessages_ibfk_1` FOREIGN KEY (`sender_email`) REFERENCES `farmer` (`email`),
+  ADD CONSTRAINT `farmermessages_ibfk_2` FOREIGN KEY (`recipient_email`) REFERENCES `veo` (`email`);
+
+--
+-- Constraints for table `veo`
+--
+ALTER TABLE `veo`
+  ADD CONSTRAINT `veo_ibfk_1` FOREIGN KEY (`residence_id`) REFERENCES `residence` (`residence_id`);
+
+--
+-- Constraints for table `veomessages`
+--
+ALTER TABLE `veomessages`
+  ADD CONSTRAINT `veomessages_ibfk_1` FOREIGN KEY (`sender_email`) REFERENCES `veo` (`email`),
+  ADD CONSTRAINT `veomessages_ibfk_2` FOREIGN KEY (`recipient_email`) REFERENCES `farmer` (`email`);
+COMMIT;
+
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;

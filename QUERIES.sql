@@ -493,3 +493,30 @@ DELIMITER ;
 
 
 
+-- user privileges 
+-- Create farmer_user with limited privileges
+CREATE USER 'farmer_user'@'localhost' IDENTIFIED BY 'farmer_password';
+GRANT SELECT, INSERT, UPDATE, DELETE ON agriculture.Farmer TO 'farmer_user'@'localhost';
+GRANT SELECT, INSERT, UPDATE, DELETE ON agriculture.Farm TO 'farmer_user'@'localhost';
+GRANT SELECT, INSERT, UPDATE, DELETE ON agriculture.FarmerMessages TO 'farmer_user'@'localhost';
+GRANT SELECT ON agriculture.Residence TO 'farmer_user'@'localhost';
+
+-- Create veo_user with limited privileges
+CREATE USER 'veo_user'@'localhost' IDENTIFIED BY 'veo_password';
+GRANT SELECT, INSERT, UPDATE, DELETE ON agriculture.Veo TO 'veo_user'@'localhost';
+GRANT SELECT, INSERT, UPDATE, DELETE ON agriculture.VeoMessages TO 'veo_user'@'localhost';
+-- Consider removing the next line if SELECT on Residence is not needed
+GRANT SELECT ON agriculture.Residence TO 'veo_user'@'localhost';
+
+-- Create admin_user with all privileges
+CREATE USER 'admin_user'@'localhost' IDENTIFIED BY 'admin_password';
+GRANT ALL PRIVILEGES ON agriculture.* TO 'admin_user'@'localhost';
+
+-- Flush privileges to apply changes
+FLUSH PRIVILEGES;
+
+
+-- if there is error in creating the above users and their privileges run this code
+REPAIR TABLE mysql.tables_priv;
+REPAIR TABLE mysql.columns_priv;
+FLUSH PRIVILEGES;
