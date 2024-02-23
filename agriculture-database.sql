@@ -155,6 +155,16 @@ CREATE DEFINER=`jerry`@`localhost` PROCEDURE `UpdateVeoMessage` (IN `p_message_i
     WHERE
         `message_id` = p_message_id;
 END$$
+CREATE DEFINER=`jerry`@`localhost` PROCEDURE ShowMessagesToFarmer(IN farmerEmail VARCHAR(100))
+BEGIN
+    SELECT * FROM FarmerMessages
+    WHERE recipient_email = farmerEmail;
+END$$
+CREATE DEFINER=`jerry`@`localhost` PROCEDURE ShowMessagesToVeo(IN veoEmail VARCHAR(100))
+BEGIN
+    SELECT * FROM VeoMessages
+    WHERE recipient_email = veoEmail;
+END$$
 
 --
 -- Functions
