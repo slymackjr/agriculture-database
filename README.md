@@ -645,6 +645,28 @@ This is an example of how you may give instructions on setting up your project l
       REPAIR TABLE mysql.columns_priv;
       FLUSH PRIVILEGES;
   ```
+  #### For an event scheduler that executes after a certain time.
+  Define the Stored procedure for it. example for expired notices.
+  ```sh
+        DELIMITER //
+        CREATE PROCEDURE delete_expired_notices()
+        BEGIN
+            DELETE FROM notices WHERE due_date < NOW();
+        END //
+        DELIMITER ;
+  ``` 
+  Then create a sheduled event that will execute the stored procedure at apecific intervals. example everyday.
+  ```sh
+        CREATE EVENT cleanup_expired_notices
+        ON SCHEDULE EVERY 1 DAY
+        STARTS CURRENT_TIMESTAMP
+        DO
+        CALL delete_expired_notices();
+  ```
+  The event will call the `delete_expired_notices()` procedure once every day starting from the current timestamp. Also, you can verify that the event has been created.
+  ```sh
+        SHOW EVENTS;
+  ```
 4. Execute the provided SQL code to create tables, triggers, procedures, and user privileges.
 5. Verify that the database, tables, triggers, procedures, and user privileges are created successfully.
 
