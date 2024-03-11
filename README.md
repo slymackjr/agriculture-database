@@ -1,4 +1,3 @@
-<!-- Improved compatibility of back-to-top link: See: https://github.com/othneildrew/Best-README-Template/pull/73 -->
 <a name="readme-top"></a>
 
 
@@ -23,12 +22,12 @@
   <p align="center">
     The system aims to facilitate effective communication between Village Extension Officers (VEOs) and farmers in the Tanzanian agriculture system
     <br />
-    <a href="https://github.com/slymackjr/E-commerce-Home-Page-Project-Test-1"><strong>Explore the docs »</strong></a>
+    <a href="https://github.com/slymackjr/agriculture-database"><strong>Explore the docs »</strong></a>
     <br />
     <br />
-    <a href="https://github.com/slymackjr/E-commerce-Home-Page-Project-Test-1/issues">Report Bug</a>
+    <a href="https://github.com/slymackjr/agriculture-database/issues">Report Bug</a>
     ·
-    <a href="https://github.com/slymackjr/E-commerce-Home-Page-Project-Test-1/issues">Request Feature</a>
+    <a href="https://github.com/slymackjr/agriculture-database/issues">Request Feature</a>
   </p>
 </div>
 
@@ -728,7 +727,7 @@ Distributed under the MIT License. See `LICENSE.txt` for more information.
 ## Contact
 
 Jofrey Nyamasheki - [https://twitter.com/slymackjr](https://x.com/slymack_w?t=naiyIend2MU_qg-Tm4jQgw&s=09)
-Project Link: [https://github.com/slymackjr/E-commerce-Home-Page-Project-Test-1](https://github.com/slymackjr/E-commerce-Home-Page-Project-Test-1)
+Project Link: [https://github.com/slymackjr/agriculture-database](https://github.com/slymackjr/agriculture-database)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
