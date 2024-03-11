@@ -144,7 +144,8 @@ This is an example of how you may give instructions on setting up your project l
       residence_id VARCHAR(255),
       phone_number VARCHAR(10),
       email VARCHAR(255) PRIMARY KEY,
-      FOREIGN KEY (residence_id) REFERENCES Residence(residence_id)
+      FOREIGN KEY (residence_id) REFERENCES
+      Residence(residence_id)
   );
   ```
   #### Farmer table
@@ -158,8 +159,10 @@ This is an example of how you may give instructions on setting up your project l
       farm_id VARCHAR(255),
       phone_number VARCHAR(10),
       email VARCHAR(255) PRIMARY KEY,
-      FOREIGN KEY (residence_id) REFERENCES Residence(residence_id),
-      FOREIGN KEY (farm_id) REFERENCES Farm(farm_id)
+      FOREIGN KEY (residence_id) REFERENCES
+      Residence(residence_id),
+      FOREIGN KEY (farm_id) REFERENCES 
+      Farm(farm_id)
   );
   ```
   #### FarmerMessages table
@@ -172,8 +175,10 @@ This is an example of how you may give instructions on setting up your project l
       content TEXT NOT NULL,
       sent_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
       type ENUM('information', 'pestOutbreak', 'diseaseOutbreak', 'farmProgress', 'other') NOT NULL,
-      FOREIGN KEY (sender_email) REFERENCES Farmer(email),
-      FOREIGN KEY (recipient_email) REFERENCES Veo(email)
+      FOREIGN KEY (sender_email) REFERENCES 
+      Farmer(email),
+      FOREIGN KEY (recipient_email) REFERENCES 
+      Veo(email)
   );
   ```
   #### VeoMessages table
